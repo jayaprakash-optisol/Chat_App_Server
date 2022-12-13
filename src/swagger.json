@@ -1,0 +1,655 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Chat App",
+    "license": {
+      "name": "MIT"
+    }
+  },
+
+  "host": "localhost:5000",
+  "tags": [{ "name": "Chat App", "description": "API Docs for Chat App " }],
+  "schemes": ["http"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+
+  "paths": {
+    "/api/user/register": {
+      "post": {
+        "tags": ["User"],
+        "summary": "Register New User",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "User Details",
+            "schema": { "$ref": "#/definitions/User_Model" }
+          }
+        ],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": { "$ref": "#/definitions/User_Response" }
+          },
+          "400": {
+            "description": "User already exists"
+          },
+          "404": {
+            "description": "Please enter all the Required fields"
+          }
+        }
+      }
+    },
+    "/api/user/login": {
+      "post": {
+        "tags": ["User"],
+        "summary": "User Login",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "User Credentials",
+            "schema": {
+              "type": "object",
+              "required": ["email", "password"],
+              "properties": {
+                "email": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "produces": ["application/json"],
+        "responses": {
+          "201": {
+            "description": "User Authenticated Successfully",
+            "schema": { "$ref": "#/definitions/User_Response" }
+          },
+          "404": {
+            "description": "Invalid Credentials"
+          },
+          "401": {
+            "description": "Authorization failed"
+          }
+        }
+      }
+    },
+    "/api/user/fetch": {
+      "get": {
+        "tags": ["Search User"],
+        "summary": "Fetch Users",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "description": "Type any letter to search",
+            "type": "string",
+            "required": true
+          },
+          {
+            "required": true,
+            "name": "Authorization",
+            "in": "header",
+            "description": "Ex: Bearer {JWT TOKEN}",
+            "type": "string"
+          }
+        ],
+        "produces": ["application/json"],
+        "responses": {
+          "201": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "users": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/User_Response"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/chat": {
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Create Chat",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Creates chat for given userId or Returns chat if already exists",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["userId"],
+              "properties": {
+                "userId": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "required": true,
+            "name": "Authorization",
+            "in": "header",
+            "description": "Ex: Bearer {JWT TOKEN}",
+            "type": "string"
+          }
+        ],
+        "produces": ["application/json"],
+        "responses": {
+          "201": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/Chat_Response"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "400": {
+            "description": "UserId not found"
+          }
+        }
+      }
+    },
+    "/api/chat/fetch": {
+      "get": {
+        "tags": ["Chat"],
+        "summary": "Fetch All Chats for Signed User",
+        "parameters": [
+          {
+            "required": true,
+            "name": "Authorization",
+            "in": "header",
+            "description": "Ex: Bearer {JWT TOKEN}",
+            "type": "string"
+          }
+        ],
+        "produces": ["application/json"],
+        "responses": {
+          "201": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Chat_Response"
+              }
+            }
+          },
+          "400": {
+            "description": "Failed to fetch chats"
+          },
+          "401": {
+            "description": "Authorization failed"
+          }
+        }
+      }
+    },
+    "/api/chat/group": {
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Create Group",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Creates New Group",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["name", "users"],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "users": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "required": true,
+            "name": "Authorization",
+            "in": "header",
+            "description": "Ex: Bearer {JWT TOKEN}",
+            "type": "string"
+          }
+        ],
+        "produces": ["application/json"],
+        "responses": {
+          "201": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/Chat_Response"
+            }
+          },
+          "404": {
+            "description": "All fields are required"
+          },
+          "400": {
+            "description": "Two users are required for group chat"
+          },
+          "401": {
+            "description": "Authorization failed"
+          }
+        }
+      }
+    },
+    "/api/chat/addgroup": {
+      "put": {
+        "tags": ["Chat"],
+        "summary": "Add User to Group",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Adds given user to group",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["chatId", "userId"],
+              "properties": {
+                "chatId": {
+                  "type": "string"
+                },
+                "userId": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "required": true,
+            "name": "Authorization",
+            "in": "header",
+            "description": "Ex: Bearer {JWT TOKEN}",
+            "type": "string"
+          }
+        ],
+        "produces": ["application/json"],
+        "responses": {
+          "201": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/Chat_Response"
+            }
+          },
+          "400": {
+            "description": "failed to add user to group"
+          },
+          "401": {
+            "description": "Authorization failed"
+          }
+        }
+      }
+    },
+    "/api/chat/removegroup": {
+      "put": {
+        "tags": ["Chat"],
+        "summary": "Remove User from Group",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Removes given user from group",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["chatId", "userId"],
+              "properties": {
+                "chatId": {
+                  "type": "string"
+                },
+                "userId": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "required": true,
+            "name": "Authorization",
+            "in": "header",
+            "description": "Ex: Bearer {JWT TOKEN}",
+            "type": "string"
+          }
+        ],
+        "produces": ["application/json"],
+        "responses": {
+          "201": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/Chat_Response"
+            }
+          },
+          "400": {
+            "description": "failed to add remove user from group"
+          },
+          "401": {
+            "description": "Authorization failed"
+          }
+        }
+      }
+    },
+    "/api/chat/rename": {
+      "put": {
+        "tags": ["Chat"],
+        "summary": "Rename Group",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Rename Group",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["chatId", "chatName"],
+              "properties": {
+                "chatId": {
+                  "type": "string"
+                },
+                "chatName": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "required": true,
+            "name": "Authorization",
+            "in": "header",
+            "description": "Ex: Bearer {JWT TOKEN}",
+            "type": "string"
+          }
+        ],
+        "produces": ["application/json"],
+        "responses": {
+          "201": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/Chat_Response"
+            }
+          },
+          "400": {
+            "description": "failed to rename group"
+          },
+          "401": {
+            "description": "Authorization failed"
+          }
+        }
+      }
+    },
+    "/api/message": {
+      "post": {
+        "tags": ["Message"],
+        "summary": "Send Message",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Sends new Message",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["chatId", "content"],
+              "properties": {
+                "content": {
+                  "type": "string"
+                },
+                "chatId": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "required": true,
+            "name": "Authorization",
+            "in": "header",
+            "description": "Ex: Bearer {JWT TOKEN}",
+            "type": "string"
+          }
+        ],
+        "produces": ["application/json"],
+        "responses": {
+          "201": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "$ref": "#/definitions/Message_Model"
+            }
+          },
+          "400": {
+            "description": "failed to send message"
+          },
+          "404": {
+            "description": "Invalid data passed"
+          },
+          "401": {
+            "description": "Authorization failed"
+          }
+        }
+      }
+    },
+    "/api/message/{chatId}": {
+      "get": {
+        "tags": ["Message"],
+        "summary": "Fetch All Messages",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chatId",
+            "description": "Sends new Message",
+            "type": "string",
+            "required": true
+          },
+          {
+            "required": true,
+            "name": "Authorization",
+            "in": "header",
+            "description": "Ex: Bearer {JWT TOKEN}",
+            "type": "string"
+          }
+        ],
+        "produces": ["application/json"],
+        "responses": {
+          "201": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Message_Model"
+              }
+            }
+          },
+          "400": {
+            "description": "failed to fetch messages"
+          },
+          "401": {
+            "description": "Authorization failed"
+          }
+        }
+      }
+    }
+  },
+
+  "definitions": {
+    "User_Model": {
+      "type": "object",
+      "required": ["name", "email", "password", "isAdmin"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "profilePhoto": {
+          "type": "string"
+        },
+        "isAdmin": {
+          "type": "boolean"
+        }
+      }
+    },
+    "User_Response": {
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "Auto Generated"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "profilePhoto": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string",
+          "description": "Auto Generated by JWT"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Auto Generated by DB"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Auto Generated by DB"
+        }
+      }
+    },
+    "Chat_Response": {
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "Auto Generated"
+        },
+        "chatName": {
+          "type": "string"
+        },
+        "isGroupChat": {
+          "type": "boolean"
+        },
+        "users": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/User_Response"
+          }
+        },
+        "latestMessage": {
+          "type": "object",
+          "$ref": "#/definitions/Message_Response"
+        },
+        "groupAdmin": {
+          "type": "object",
+          "$ref": "#/definitions/User_Response"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Auto Generated by DB"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Auto Generated by DB"
+        }
+      }
+    },
+
+    "Message_Model": {
+      "type": "object",
+      "properties": {
+        "sender": {
+          "type": "object",
+          "$ref": "#/definitions/User_Response"
+        },
+        "content": {
+          "type": "string"
+        },
+        "readBy": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/User_Response"
+          }
+        },
+        "chat": {
+          "type": "object",
+          "$ref": "#/definitions/Chat_Response"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Auto Generated by DB"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Auto Generated by DB"
+        }
+      }
+    },
+
+    "Message_Response": {
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string",
+          "description": "Auto Generated"
+        },
+        "sender": {
+          "type": "object",
+          "properties": {
+            "_id": { "type": "string", "description": "Auto Generated" },
+            "name": { "type": "string" },
+            "email": { "type": "string" }
+          }
+        },
+        "content": {
+          "type": "string"
+        },
+        "readBy": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "chat": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Auto Generated by DB"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Auto Generated by DB"
+        }
+      }
+    }
+  }
+}
